@@ -4,442 +4,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio Digital</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Preload crítico para performance -->
+    <link rel="preload" href="styles.min.css" as="style">
+    <link rel="preload" href="app.min.js" as="script">
+    <link rel="preconnect" href="https://docs.google.com">
+    <link rel="preconnect" href="https://api.allorigins.win">
+    <link rel="dns-prefetch" href="https://wa.me">
+    <link rel="dns-prefetch" href="https://www.google.com">
+
+    <!-- CSS otimizado -->
+    <link rel="stylesheet" href="styles.min.css">
+
+    <!-- Meta tags para SEO e performance -->
+    <meta name="description" content="Cardápio digital interativo com busca e categorias">
+    <meta name="keywords" content="cardápio, restaurante, delivery, comida">
+    <meta name="author" content="Cardápio Digital">
+    <meta name="robots" content="index, follow">
+
+    <!-- PWA Support -->
+    <meta name="theme-color" content="#ff6b6b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Cardápio Digital">
+    <meta name="msapplication-TileColor" content="#ff6b6b">
+    <meta name="msapplication-config" content="browserconfig.xml">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23ff6b6b' rx='20'/><text x='90' y='120' font-size='90' text-anchor='middle' fill='white'>🍽️</text></svg>">
+
+    <!-- Critical CSS inline para above-the-fold -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Critical CSS para carregamento inicial */
+        body { margin: 0; font-family: Arial, sans-serif; background: #667eea; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; }
+        .header { background: linear-gradient(45deg, #ff6b6b, #ee5a24); color: #fff; padding: 30px; text-align: center; }
+        .loading { text-align: center; padding: 50px; color: #666; }
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 15px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-
-        .company-name {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .slogan {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-
-        .search-container {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 25px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .search-box:focus {
-            border-color: #ff6b6b;
-        }
-
-        .categories {
-            display: flex;
-            overflow-x: auto;
-            padding: 20px;
-            background: #f8f9fa;
-            gap: 10px;
-        }
-
-        .category-btn {
-            background: white;
-            border: 2px solid #ddd;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .category-btn:hover, .category-btn.active {
+        /* Install prompt styles */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
             background: #ff6b6b;
             color: white;
-            border-color: #ff6b6b;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .menu-items {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .menu-item {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .menu-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-
-        .item-image {
-            width: 100%;
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-color: #f8f9fa;
-        }
-
-        .item-content {
-            padding: 20px;
-        }
-
-        .item-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .item-description {
-            color: #666;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .item-price {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #ff6b6b;
-            margin-bottom: 10px;
-        }
-
-        .item-observation {
-            font-size: 0.9em;
-            color: #888;
-            font-style: italic;
-        }
-
-        .footer {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-
-        .contact-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .contact-item {
-            display: flex;
-            flex-direction: column;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
             align-items: center;
             gap: 15px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
         }
 
-        .contact-item h3 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-            color: #ecf0f1;
-            font-weight: 600;
+        .install-prompt.show { display: flex; }
+
+        .install-prompt button {
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
-        .contact-link {
+        .install-prompt .close {
+            background: transparent;
             color: white;
-            text-decoration: none;
-            padding: 15px 25px;
-            border-radius: 50px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
-            transition: all 0.4s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 15px;
-            font-weight: 500;
-            min-width: 220px;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .contact-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .contact-link:hover::before {
-            left: 100%;
-        }
-
-        .contact-link:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        .contact-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .contact-icon svg {
-            width: 100%;
-            height: 100%;
-            fill: currentColor;
-        }
-
-        .whatsapp-link:hover {
-            background: linear-gradient(135deg, #25d366, #128c7e);
-            border-color: #25d366;
-        }
-
-        .maps-link:hover {
-            background: linear-gradient(135deg, #4285f4, #3367d6);
-            border-color: #4285f4;
-        }
-
-        .email-link:hover {
-            background: linear-gradient(135deg, #ea4335, #d33b2c);
-            border-color: #ea4335;
-        }
-
-        .social-section {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 30px;
-        }
-
-        .social-title {
-            font-size: 1.3em;
-            margin-bottom: 20px;
-            color: #ecf0f1;
-            font-weight: 600;
-        }
-
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .social-link {
-            color: white;
-            text-decoration: none;
-            padding: 15px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
-            transition: all 0.4s ease;
             font-size: 20px;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            padding: 0;
+            width: 30px;
+            height: 30px;
         }
 
-        .social-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .social-link:hover::before {
-            left: 100%;
-        }
-
-        .social-link:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
-        .social-link svg {
-            width: 28px;
-            height: 28px;
-            fill: currentColor;
-        }
-
-        .facebook-link:hover {
-            background: linear-gradient(135deg, #1877f2, #166fe5);
-            border-color: #1877f2;
-        }
-
-        .instagram-link:hover {
-            background: linear-gradient(135deg, #e4405f, #fd1d1d, #fcb045);
-            border-color: #e4405f;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 1.2em;
-            color: #666;
-        }
-
-        .error {
-            text-align: center;
-            padding: 30px;
-            color: #dc3545;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 10px;
-            margin: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .company-name {
-                font-size: 2em;
-            }
-
-            .menu-items {
-                grid-template-columns: 1fr;
-            }
-
-            .categories {
-                padding: 15px;
-            }
-
-            .contact-info {
-                grid-template-columns: 1fr;
-                gap: 25px;
-            }
-
-            .contact-link {
-                min-width: auto;
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .social-links {
-                gap: 15px;
-            }
-
-            .social-link {
-                width: 55px;
-                height: 55px;
-            }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <div>
+            <strong>📱 Instalar App</strong><br>
+            <small>Adicione à tela inicial para acesso rápido</small>
+        </div>
+        <button id="installBtn">Instalar</button>
+        <button class="close" id="closeInstall">×</button>
+    </div>
+
+    <!-- Estrutura otimizada -->
     <div class="container">
-        <div class="header">
+        <header class="header">
             <div class="logo" id="logo">🍽️</div>
             <h1 class="company-name" id="companyName">Carregando...</h1>
             <p class="slogan" id="slogan">Carregando...</p>
-        </div>
+        </header>
 
-        <div class="search-container">
-            <input type="text" class="search-box" id="searchBox" placeholder="Buscar item no cardápio...">
-        </div>
+        <section class="search-container">
+            <input 
+                type="text" 
+                class="search-box" 
+                id="searchBox" 
+                placeholder="Buscar item no cardápio..."
+                autocomplete="off"
+                spellcheck="false"
+            >
+        </section>
 
-        <div class="categories" id="categories">
+        <nav class="categories" id="categories" role="navigation" aria-label="Categorias do cardápio">
             <div class="loading">Carregando categorias...</div>
-        </div>
+        </nav>
 
-        <div class="menu-items" id="menuItems">
+        <main class="menu-items" id="menuItems" role="main" aria-label="Itens do cardápio">
             <div class="loading">Carregando itens do cardápio...</div>
-        </div>
+        </main>
 
-        <div class="footer">
+        <footer class="footer">
             <div class="contact-info">
                 <div class="contact-item">
                     <h3>📍 Localização</h3>
-                    <a href="#" class="contact-link maps-link" id="addressLink" target="_blank">
+                    <a href="#" class="contact-link maps-link" id="addressLink" target="_blank" rel="noopener">
                         <span class="contact-icon">
-                            <svg viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                             </svg>
                         </span>
                         <span>Ver no Google Maps</span>
                     </a>
                 </div>
+
                 <div class="contact-item">
                     <h3>💬 WhatsApp</h3>
-                    <a href="#" class="contact-link whatsapp-link" id="whatsappLink" target="_blank">
+                    <a href="#" class="contact-link whatsapp-link" id="whatsappLink" target="_blank" rel="noopener">
                         <span class="contact-icon">
-                            <svg viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.465 3.488"/>
                             </svg>
                         </span>
                         <span>Chamar no WhatsApp</span>
                     </a>
                 </div>
+
                 <div class="contact-item">
                     <h3>✉️ Email</h3>
                     <a href="#" class="contact-link email-link" id="emailLink">
                         <span class="contact-icon">
-                            <svg viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                             </svg>
                         </span>
@@ -451,366 +170,79 @@
             <div class="social-section">
                 <h3 class="social-title">🌟 Siga-nos nas Redes Sociais</h3>
                 <div class="social-links">
-                    <a href="#" class="social-link facebook-link" id="facebookLink" target="_blank" title="Facebook">
-                        <svg viewBox="0 0 24 24">
+                    <a href="#" class="social-link facebook-link" id="facebookLink" target="_blank" rel="noopener" title="Facebook" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                     </a>
-                    <a href="#" class="social-link instagram-link" id="instagramLink" target="_blank" title="Instagram">
-                        <svg viewBox="0 0 24 24">
+                    <a href="#" class="social-link instagram-link" id="instagramLink" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                     </a>
                 </div>
             </div>
-        </div>
+        </footer>
     </div>
 
+    <!-- JavaScript otimizado carregado de forma assíncrona -->
+    <script src="app.min.js" defer></script>
+
+    <!-- PWA Install Script -->
     <script>
-        // SOLUÇÃO DEFINITIVA PARA CORS - USANDO PROXY CORS GRATUITO
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const closeInstall = document.getElementById('closeInstall');
 
-        // URLs das planilhas do Google Sheets
-        // FORMATO: https://docs.google.com/spreadsheets/d/[ID]/export?format=csv&gid=[GID]
-        const SHEETS_URLS = {
-            items: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdo_a3BcS2mEyF7A595xgXVB2hQbSL_XQ8SLhXA6cmkCyt2I05eRldf6wDeRND7TDizORSFYsiQrdj/pub?gid=1746857403&single=true&output=csv',
-            categories: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdo_a3BcS2mEyF7A595xgXVB2hQbSL_XQ8SLhXA6cmkCyt2I05eRldf6wDeRND7TDizORSFYsiQrdj/pub?gid=549200017&single=true&output=csv', 
-            config: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdo_a3BcS2mEyF7A595xgXVB2hQbSL_XQ8SLhXA6cmkCyt2I05eRldf6wDeRND7TDizORSFYsiQrdj/pub?gid=1181106320&single=true&output=csv'
-        };
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
 
-        let allItems = [];
-        let allCategories = [];
-        let config = {};
-        let currentCategory = 'all';
-
-        // Função para buscar dados usando proxy CORS
-        async function fetchSheetData(url) {
-            try {
-                // Usar proxy CORS para contornar limitações
-                const proxyUrl = CORS_PROXY + encodeURIComponent(url);
-
-                const response = await fetch(proxyUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/plain,*/*'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // Mostrar prompt após 3 segundos
+            setTimeout(() => {
+                if (!localStorage.getItem('pwa-dismissed')) {
+                    installPrompt.classList.add('show');
                 }
+            }, 3000);
+        });
 
-                const text = await response.text();
-                return parseCSV(text);
-            } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-
-                // Fallback: tentar sem proxy (caso o proxy esteja fora)
-                try {
-                    const directResponse = await fetch(url);
-                    const directText = await directResponse.text();
-                    return parseCSV(directText);
-                } catch (directError) {
-                    showError(`Erro ao carregar dados: ${error.message}. Verifique se as URLs estão corretas e a planilha está pública.`);
-                    return [];
-                }
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`PWA install: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.classList.remove('show');
             }
+        });
+
+        closeInstall.addEventListener('click', () => {
+            installPrompt.classList.remove('show');
+            localStorage.setItem('pwa-dismissed', 'true');
+        });
+
+        // Detectar se já está instalado
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA instalado com sucesso!');
+            installPrompt.classList.remove('show');
+        });
+    </script>
+
+    <!-- Schema.org para SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "Cardápio Digital",
+        "description": "Cardápio digital interativo",
+        "url": window.location.href,
+        "hasMenu": {
+            "@type": "Menu",
+            "name": "Cardápio Principal"
         }
-
-        // Função para mostrar erros na interface
-        function showError(message) {
-            const containers = ['categories', 'menuItems'];
-            containers.forEach(containerId => {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = `
-                        <div class="error">
-                            ⚠️ ${message}
-                            <br><br>
-                            <strong>Possíveis soluções:</strong><br>
-                            1. Verifique se as URLs estão no formato correto<br>
-                            2. Confirme se a planilha está publicada na web<br>
-                            3. Teste as URLs no navegador<br>
-                            4. Aguarde alguns minutos e tente novamente
-                        </div>
-                    `;
-                }
-            });
-        }
-
-        // Função para converter CSV em array de objetos
-        function parseCSV(text) {
-            if (!text || text.trim() === '') {
-                return [];
-            }
-
-            const lines = text.split('\n').filter(line => line.trim());
-            if (lines.length === 0) return [];
-
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            const data = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim()) {
-                    const values = parseCSVLine(lines[i]);
-                    const obj = {};
-
-                    headers.forEach((header, index) => {
-                        obj[header] = values[index] ? values[index].trim().replace(/"/g, '') : '';
-                    });
-
-                    data.push(obj);
-                }
-            }
-            return data;
-        }
-
-        // Função auxiliar para parsing de linha CSV
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current);
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-
-            result.push(current);
-            return result;
-        }
-
-        // Função para formatar número de WhatsApp
-        function formatWhatsAppNumber(phone) {
-            // Remove todos os caracteres não numéricos
-            const cleanPhone = phone.replace(/\D/g, '');
-
-            // Se não começar com 55 (código do Brasil), adiciona
-            if (!cleanPhone.startsWith('55')) {
-                return '55' + cleanPhone;
-            }
-
-            return cleanPhone;
-        }
-
-        // Função para criar link do Google Maps
-        function createMapsLink(address) {
-            const encodedAddress = encodeURIComponent(address);
-            return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-        }
-
-        // Carregar configurações
-        async function loadConfig() {
-            const configData = await fetchSheetData(SHEETS_URLS.config);
-            if (configData.length > 0) {
-                config = configData[0];
-                updateConfigUI();
-            }
-        }
-
-        // Atualizar interface com configurações
-        function updateConfigUI() {
-            document.getElementById('companyName').textContent = config.nome_empresa || 'Meu Restaurante';
-            document.getElementById('slogan').textContent = config.slogan || 'Sabor que conquista';
-
-            // Configurar link do Google Maps
-            if (config.endereco) {
-                const mapsLink = createMapsLink(config.endereco);
-                document.getElementById('addressLink').href = mapsLink;
-                document.getElementById('addressLink').querySelector('span:last-child').textContent = config.endereco;
-            }
-
-            // Configurar link do WhatsApp
-            if (config.whatsapp) {
-                const formattedNumber = formatWhatsAppNumber(config.whatsapp);
-                const whatsappLink = `https://wa.me/${formattedNumber}`;
-                document.getElementById('whatsappLink').href = whatsappLink;
-                document.getElementById('whatsappLink').querySelector('span:last-child').textContent = config.whatsapp;
-            }
-
-            // Configurar email
-            if (config.email) {
-                document.getElementById('emailLink').href = `mailto:${config.email}`;
-                document.getElementById('emailLink').querySelector('span:last-child').textContent = config.email;
-            }
-
-            // Configurar redes sociais
-            if (config.facebook) {
-                document.getElementById('facebookLink').href = config.facebook;
-            }
-            if (config.instagram) {
-                document.getElementById('instagramLink').href = config.instagram;
-            }
-
-            // Aplicar cores personalizadas
-            if (config.cor_primaria) {
-                const style = document.createElement('style');
-                style.textContent = `
-                    .search-box:focus, .category-btn:hover, .category-btn.active, 
-                    .item-price { 
-                        border-color: ${config.cor_primaria} !important; 
-                        background-color: ${config.cor_primaria} !important; 
-                        color: white !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-        }
-
-        // Carregar categorias
-        async function loadCategories() {
-            allCategories = await fetchSheetData(SHEETS_URLS.categories);
-            renderCategories();
-        }
-
-        // Renderizar categorias SEM IMAGENS
-        function renderCategories() {
-            const container = document.getElementById('categories');
-            container.innerHTML = '';
-
-            // Botão "Todos"
-            const allBtn = document.createElement('div');
-            allBtn.className = 'category-btn active';
-            allBtn.innerHTML = '<span>🍽️</span> Todos';
-            allBtn.onclick = () => filterByCategory('all', allBtn);
-            container.appendChild(allBtn);
-
-            // Categorias da planilha - APENAS TEXTO
-            allCategories
-                .filter(cat => cat.disponivel && cat.disponivel.toLowerCase() === 'sim')
-                .sort((a, b) => parseInt(a.ordem || 0) - parseInt(b.ordem || 0))
-                .forEach(category => {
-                    const btn = document.createElement('div');
-                    btn.className = 'category-btn';
-                    btn.innerHTML = category.nome; // APENAS O NOME, SEM IMAGEM
-                    btn.onclick = () => filterByCategory(category.nome, btn);
-                    container.appendChild(btn);
-                });
-        }
-
-        // Carregar itens
-        async function loadItems() {
-            allItems = await fetchSheetData(SHEETS_URLS.items);
-            renderItems();
-        }
-
-        // Renderizar itens
-        function renderItems(items = null) {
-            const container = document.getElementById('menuItems');
-            const itemsToShow = items || allItems.filter(item => 
-                item.disponivel && item.disponivel.toLowerCase() === 'sim'
-            );
-
-            if (itemsToShow.length === 0) {
-                container.innerHTML = '<div class="loading">Nenhum item encontrado</div>';
-                return;
-            }
-
-            container.innerHTML = '';
-            itemsToShow.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'menu-item';
-
-                const price = parseFloat(item.preco || 0);
-                const formattedPrice = price > 0 ? price.toFixed(2).replace('.', ',') : '0,00';
-
-                itemDiv.innerHTML = `
-                    ${item.foto ? `<div class="item-image" style="background-image: url('${item.foto}')"></div>` : ''}
-                    <div class="item-content">
-                        <div class="item-name">${item.nome || 'Item sem nome'}</div>
-                        <div class="item-description">${item.descricao || ''}</div>
-                        <div class="item-price">R$ ${formattedPrice}</div>
-                        ${item.observacao ? `<div class="item-observation">${item.observacao}</div>` : ''}
-                    </div>
-                `;
-                container.appendChild(itemDiv);
-            });
-        }
-
-        // Filtrar por categoria
-        function filterByCategory(category, buttonElement) {
-            currentCategory = category;
-
-            // Atualizar botões ativos
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            buttonElement.classList.add('active');
-
-            // Filtrar itens
-            let filteredItems = allItems.filter(item => 
-                item.disponivel && item.disponivel.toLowerCase() === 'sim'
-            );
-
-            if (category !== 'all') {
-                filteredItems = filteredItems.filter(item => item.categoria === category);
-            }
-
-            renderItems(filteredItems);
-        }
-
-        // Buscar itens
-        function searchItems() {
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-            let filteredItems = allItems.filter(item => 
-                item.disponivel && item.disponivel.toLowerCase() === 'sim' &&
-                (item.nome.toLowerCase().includes(searchTerm) ||
-                 (item.descricao && item.descricao.toLowerCase().includes(searchTerm)))
-            );
-
-            if (currentCategory !== 'all') {
-                filteredItems = filteredItems.filter(item => item.categoria === currentCategory);
-            }
-
-            renderItems(filteredItems);
-        }
-
-        // Event listeners
-        document.getElementById('searchBox').addEventListener('input', searchItems);
-
-        // Verificar se as URLs estão configuradas
-        function checkConfiguration() {
-            const hasValidUrls = Object.values(SHEETS_URLS).every(url => 
-                url && url !== 'COLE_AQUI_A_URL_DA_ABA_ITENS' && 
-                url !== 'COLE_AQUI_A_URL_DA_ABA_CATEGORIAS' && 
-                url !== 'COLE_AQUI_A_URL_DA_ABA_CONFIG'
-            );
-
-            if (!hasValidUrls) {
-                showError('URLs das planilhas não configuradas. Edite o arquivo HTML e cole as URLs corretas.');
-                return false;
-            }
-            return true;
-        }
-
-        // Inicializar aplicação
-        async function init() {
-            if (!checkConfiguration()) {
-                return;
-            }
-
-            try {
-                await Promise.all([
-                    loadConfig(),
-                    loadCategories(),
-                    loadItems()
-                ]);
-            } catch (error) {
-                console.error('Erro na inicialização:', error);
-                showError('Erro ao carregar o cardápio. Verifique as URLs das planilhas e tente novamente.');
-            }
-        }
-
-        // Iniciar quando a página carregar
-        window.addEventListener('load', init);
+    }
     </script>
 </body>
 </html>
